@@ -223,11 +223,13 @@ const createWindow = () => {
 
     // IPC Handlers for Custom Controls
     ipcMain.handle('minimize-window', () => {
+        console.log('[IPC] Minimize requested');
         mainWindow.minimize();
     });
 
     ipcMain.handle('close-window', () => {
-        mainWindow.close();
+        console.log('[IPC] Close requested - Quitting App');
+        app.quit();
     });
 
     // ...

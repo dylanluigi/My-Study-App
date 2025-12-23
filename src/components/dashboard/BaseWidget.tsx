@@ -1,12 +1,11 @@
 import { type ReactNode } from 'react';
 import { clsx } from 'clsx';
-import { motion } from 'framer-motion';
+import { motion, type HTMLMotionProps } from 'framer-motion';
 
-export interface BaseWidgetProps {
+export interface BaseWidgetProps extends HTMLMotionProps<'div'> {
     title?: string;
     icon?: ReactNode;
     children: ReactNode;
-    className?: string;
     colSpan?: 1 | 2 | 3 | 4;
     rowSpan?: number;
     headerRight?: ReactNode;
@@ -19,7 +18,8 @@ export function BaseWidget({
     className,
     colSpan = 1,
     rowSpan = 1,
-    headerRight
+    headerRight,
+    ...props
 }: BaseWidgetProps) {
     return (
         <motion.div
@@ -37,6 +37,7 @@ export function BaseWidget({
                 `row-span-${rowSpan}`,
                 className
             )}
+            {...props}
         >
             {(title || icon) && (
                 <div className="flex items-center justify-between shrink-0">

@@ -29,6 +29,7 @@ import { SortableWidget } from './widgets/SortableWidget';
 import { PomodoroTimerWidget } from './widgets/PomodoroTimerWidget';
 
 import { YoutubeWidget } from './widgets/YoutubeWidget';
+import { PdfWidget } from './widgets/PdfWidget';
 import { useUser } from '../../services/user/UserContext';
 
 interface DashboardProps {
@@ -41,9 +42,11 @@ const AVAILABLE_WIDGETS: { type: WidgetType, title: string, defaultSpan: 1 | 2 |
     { type: 'exams', title: "Next Exam", defaultSpan: 2 },
     { type: 'spotify', title: "Spotify Player", defaultSpan: 2 },
     { type: 'youtube', title: "YouTube Player", defaultSpan: 2 },
+    { type: 'pdf', title: "PDF Reader", defaultSpan: 2 },
     { type: 'pomodoro', title: "Pomodoro Timer", defaultSpan: 1 },
     { type: 'clock', title: "Clock", defaultSpan: 1 },
 ];
+
 
 export function DashboardView({ onNavigate, isVisible }: DashboardProps) {
     const [todos, setTodos] = useState<TodoItem[]>(() => storage.getTodos());
@@ -316,9 +319,10 @@ export function DashboardView({ onNavigate, isVisible }: DashboardProps) {
                                                 />
                                             )}
                                             {widget.type === 'clock' && <ClockWidget />}
+                                            {widget.type === 'pdf' && <PdfWidget />}
 
                                             {/* Fallback/Error state */}
-                                            {!['focus', 'exams', 'spotify', 'clock', 'youtube', 'pomodoro'].includes(widget.type) && (
+                                            {!['focus', 'exams', 'spotify', 'clock', 'youtube', 'pomodoro', 'pdf'].includes(widget.type) && (
                                                 <BaseWidget title="Unknown Widget" colSpan={widget.colSpan}>
                                                     <div className="text-red-400 text-sm">Widget type '{widget.type}' not found.</div>
                                                 </BaseWidget>

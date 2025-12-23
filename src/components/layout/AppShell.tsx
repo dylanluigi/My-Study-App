@@ -23,19 +23,25 @@ export function AppShell({ children, activeTab, onTabChange }: AppShellProps) {
         <div className="flex h-screen w-screen overflow-hidden text-slate-800">
             {/* Custom Title Bar Area */}
             <div
-                className="fixed top-0 left-0 w-full h-10 z-50 flex items-center justify-end px-3 gap-2 hover:bg-black/5 transition-colors group"
+                className="fixed top-0 left-0 w-full h-10 z-50 flex items-center justify-start px-3 gap-2 hover:bg-black/5 transition-colors group"
                 style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
             >
                 {/* Window Controls (No Drag Region for Buttons) */}
                 <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}>
                     <button
-                        onClick={() => (window as unknown as { electron: { minimize: () => void } }).electron?.minimize()}
+                        onClick={() => {
+                            console.log('Minimize clicked');
+                            (window as unknown as { electron: { minimize: () => void } }).electron?.minimize()
+                        }}
                         className="p-1.5 rounded-full hover:bg-black/10 text-slate-500 hover:text-slate-800 transition-colors"
                     >
                         <Minus size={14} />
                     </button>
                     <button
-                        onClick={() => (window as unknown as { electron: { close: () => void } }).electron?.close()}
+                        onClick={() => {
+                            console.log('Close clicked');
+                            (window as unknown as { electron: { close: () => void } }).electron?.close()
+                        }}
                         className="p-1.5 rounded-full hover:bg-red-100 text-slate-500 hover:text-red-600 transition-colors"
                     >
                         <X size={14} />
