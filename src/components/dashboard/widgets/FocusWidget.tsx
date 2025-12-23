@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 import { CheckCircle, ArrowRight, ChevronDown, ChevronRight, FileText } from 'lucide-react';
 import { clsx } from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -34,17 +34,25 @@ export function FocusWidget({ todos, exams, onNavigate, onToggleTask }: FocusWid
         });
     }, [todos]);
 
-    const groupedTasks = useMemo(() => focusTasks.reduce<Record<string, TodoItem[]>>((groups, task) => {
+    const { groupedTasks, noSubjectTasks } = useMemo(() => focusTasks.reduce<{ groupedTasks: Record<string, TodoItem[]>; noSubjectTasks: TodoItem[] }>((acc, task) => {
         if (task.subjectId) {
-            if (!groups[task.subjectId]) groups[task.subjectId] = [];
-            groups[task.subjectId].push(task);
+            if (!acc.groupedTasks[task.subjectId]) acc.groupedTasks[task.subjectId] = [];
+            acc.groupedTasks[task.subjectId].push(task);
+        } else {
+            acc.noSubjectTasks.push(task);
         }
-        return groups;
-    }, {}), [focusTasks]);
-
-    const noSubjectTasks = useMemo(() => focusTasks.filter(task => !task.subjectId), [focusTasks]);
+        return acc;
+    }, { groupedTasks: {}, noSubjectTasks: [] }), [focusTasks]);
 
     const subjectLookup = useMemo(() => Object.fromEntries(exams.map(exam => [exam.id, exam])), [exams]);
+
+    const handleToggleExpand = useCallback((id: string) => {
+        setExpandedTaskId(prev => prev === id ? null : id);
+    }, []);
+
+    const handleToggleComplete = useCallback((id: string) => {
+        onToggleTask(id);
+    }, [onToggleTask]);
 
     return (
         <BaseWidget
@@ -80,8 +88,8 @@ export function FocusWidget({ todos, exams, onNavigate, onToggleTask }: FocusWid
                                             key={task.id}
                                             task={task}
                                             isExpanded={expandedTaskId === task.id}
-                                            onToggleExpand={() => setExpandedTaskId(expandedTaskId === task.id ? null : task.id)}
-                                            onToggleComplete={() => onToggleTask(task.id)}
+                                            onToggleExpand={handleToggleExpand}
+                                            onToggleComplete={handleToggleComplete}
                                             subjectColor={subject?.color}
                                         />
                                     ))}
@@ -97,8 +105,8 @@ export function FocusWidget({ todos, exams, onNavigate, onToggleTask }: FocusWid
                                         key={task.id}
                                         task={task}
                                         isExpanded={expandedTaskId === task.id}
-                                        onToggleExpand={() => setExpandedTaskId(expandedTaskId === task.id ? null : task.id)}
-                                        onToggleComplete={() => onToggleTask(task.id)}
+                                        onToggleExpand={handleToggleExpand}
+                                        onToggleComplete={handleToggleComplete}
                                     />
                                 ))}
                             </div>
@@ -111,7 +119,7 @@ export function FocusWidget({ todos, exams, onNavigate, onToggleTask }: FocusWid
 }
 
 // Internal component
-function DashboardTaskItem({
+function DashboardTaskItemComponent({
     task,
     isExpanded,
     onToggleExpand,
@@ -120,13 +128,13 @@ function DashboardTaskItem({
 }: {
     task: TodoItem,
     isExpanded: boolean,
-    onToggleExpand: () => void,
-    onToggleComplete: () => void,
+    onToggleExpand: (id: string) => void,
+    onToggleComplete: (id: string) => void,
     subjectColor?: string
 }) {
     return (
         <div
-            onClick={onToggleExpand}
+            onClick={() => onToggleExpand(task.id)}
             className={clsx(
                 "group flex flex-col rounded-xl border transition-all cursor-pointer overflow-hidden",
                 isExpanded ? "bg-white/80 border-blue-200 shadow-md" : "bg-white/40 border-white/20 shadow-sm hover:bg-white/60"
@@ -137,7 +145,7 @@ function DashboardTaskItem({
                 <button
                     onClick={(e) => {
                         e.stopPropagation();
-                        onToggleComplete();
+                        onToggleComplete(task.id);
                     }}
                     className={clsx(
                         "h-5 w-5 rounded-full border-2 flex items-center justify-center transition-all",
@@ -179,3 +187,5 @@ function DashboardTaskItem({
         </div>
     );
 }
+
+const DashboardTaskItem = memo(DashboardTaskItemComponent);
