@@ -1,4 +1,4 @@
-import { type CalendarEvent, type Exam, type TodoItem, type WidgetInstance } from '../types';
+import { type CalendarEvent, type Exam, type TodoItem, type WidgetInstance, type UserProfile } from '../types';
 
 export const storage = {
     getEvents: (): CalendarEvent[] => {
@@ -53,5 +53,17 @@ export const storage = {
     },
     saveLayout: (layout: WidgetInstance[]) => {
         localStorage.setItem('dashboard_layout', JSON.stringify(layout));
+    },
+
+    getUserProfile: (): UserProfile => {
+        try {
+            const item = localStorage.getItem('user_profile');
+            return item ? JSON.parse(item) : { name: 'Dylan' };
+        } catch {
+            return { name: 'Dylan' };
+        }
+    },
+    saveUserProfile: (profile: UserProfile) => {
+        localStorage.setItem('user_profile', JSON.stringify(profile));
     }
 };
