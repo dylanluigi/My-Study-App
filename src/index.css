@@ -1,0 +1,65 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    /* macOS default-ish wallpaper feel - gradient background */
+    /* Dynamic Background System */
+    background-image:
+      linear-gradient(rgba(0, 0, 0, var(--bg-overlay-opacity, 0)), rgba(0, 0, 0, var(--bg-overlay-opacity, 0))),
+      var(--bg-image, linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%));
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    transition: background-image 1s ease-in-out;
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow: hidden;
+    /* App-like feel */
+  }
+
+  code {
+    font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
+  }
+}
+
+/* Custom scrollbar to look cleaner */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+@theme {
+  --color-glass-border: rgba(255, 255, 255, 0.4);
+  --color-glass-bg: rgba(255, 255, 255, 0.65);
+}
+
+@layer utilities {
+  .glass-panel {
+    @apply border border-white/20 shadow-sm transition-all duration-300;
+    background-color: rgba(255, 255, 255, var(--glass-opacity, 0.6));
+    backdrop-filter: blur(var(--glass-blur, 12px));
+    -webkit-backdrop-filter: blur(var(--glass-blur, 12px));
+  }
+
+  .glass-panel-dark {
+    background-color: rgba(30, 41, 59, var(--glass-opacity, 0.6));
+    border-color: rgba(255, 255, 255, 0.1);
+    color: white;
+  }
+}
