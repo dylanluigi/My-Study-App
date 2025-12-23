@@ -1,7 +1,7 @@
 // Spotify OAuth 2.0 with PKCE (Proof Key for Code Exchange)
 // This is the secure way to authenticate without exposing client secret
 
-const CLIENT_ID = import.meta.env.VITE_SPOTIFY_CLIENT_ID || 'c3021f4222df4f36a59828236113824f';
+const CLIENT_ID = import.meta.env.VITE_SPOTIFY_CLIENT_ID || '';
 // Hardcoded HTTP Loopback URI per Spotify's new security policy
 const REDIRECT_URI = 'http://127.0.0.1:5173/callback';
 const SCOPES = [
@@ -47,12 +47,21 @@ async function generateCodeChallenge(verifier: string): Promise<string> {
     return base64encode(hashed);
 }
 
+function requireClientId(): string {
+    if (!CLIENT_ID) {
+        throw new Error('Missing VITE_SPOTIFY_CLIENT_ID. Add it to your .env file to enable Spotify features.');
+    }
+    return CLIENT_ID;
+}
+
 export class SpotifyAuth {
     // ========================================================================
     // OAuth Login Flow
     // ========================================================================
 
     static async login(): Promise<void> {
+        const clientId = requireClientId();
+
         // Generate PKCE code verifier and challenge
         const codeVerifier = generateRandomString(64);
         const codeChallenge = await generateCodeChallenge(codeVerifier);
@@ -62,7 +71,7 @@ export class SpotifyAuth {
 
         // Build authorization URL
         const authUrl = new URL('https://accounts.spotify.com/authorize');
-        authUrl.searchParams.append('client_id', CLIENT_ID);
+        authUrl.searchParams.append('client_id', clientId);
         authUrl.searchParams.append('response_type', 'code');
         authUrl.searchParams.append('redirect_uri', REDIRECT_URI);
         authUrl.searchParams.append('scope', SCOPES);
@@ -72,7 +81,7 @@ export class SpotifyAuth {
         // Redirect to Spotify login
         // Redirect to Spotify login
         console.log('--- Spotify Auth Debug ---');
-        console.log('Client ID:', CLIENT_ID);
+        console.log('Client ID:', clientId);
         console.log('Redirect URI:', REDIRECT_URI);
         console.log('Full URL:', authUrl.toString());
         console.log('--------------------------');
@@ -106,6 +115,7 @@ export class SpotifyAuth {
 
         // Exchange code for access token
         try {
+            const clientId = requireClientId();
             const response = await fetch('https://accounts.spotify.com/api/token', {
                 method: 'POST',
                 headers: {
@@ -115,7 +125,7 @@ export class SpotifyAuth {
                     grant_type: 'authorization_code',
                     code: code,
                     redirect_uri: REDIRECT_URI,
-                    client_id: CLIENT_ID,
+                    client_id: clientId,
                     code_verifier: codeVerifier,
                 }),
             });
@@ -177,6 +187,7 @@ export class SpotifyAuth {
         }
 
         try {
+            const clientId = requireClientId();
             const response = await fetch('https://accounts.spotify.com/api/token', {
                 method: 'POST',
                 headers: {
@@ -185,7 +196,7 @@ export class SpotifyAuth {
                 body: new URLSearchParams({
                     grant_type: 'refresh_token',
                     refresh_token: refreshToken,
-                    client_id: CLIENT_ID,
+                    client_id: clientId,
                 }),
             });
 

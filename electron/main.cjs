@@ -1,5 +1,5 @@
 const electron = require('electron');
-const { app, BrowserWindow, ipcMain, session } = electron;
+const { app, BrowserWindow, ipcMain, session, shell } = electron;
 
 if (!app) {
     console.error('CRITICAL ERROR: Electron app object is undefined!');
@@ -7,18 +7,25 @@ if (!app) {
 }
 const path = require('path');
 
+const allowSpotifyCompatibility = process.env.SPOTIFY_IFRAME_COMPAT === 'true';
+
 // ========================================================================
-// CRITICAL FIX: Disable storage partitioning and enable third-party cookies
+// Security & Spotify compatibility toggles
 // ========================================================================
-// This allows the Spotify iframe to access cookies from the login popup
-app.commandLine.appendSwitch('disable-features',
-    'SameSiteByDefaultCookies,CookiesWithoutSameSiteMustBeSecure,PartitionedCookies,ThirdPartyStoragePartitioning'
-);
-app.commandLine.appendSwitch('enable-features', 'StorageAccessAPI');
-// Disable site isolation for Spotify to allow cookie sharing
-app.commandLine.appendSwitch('disable-site-isolation-trials');
-// Improve compatibility for some renderers
-app.commandLine.appendSwitch('no-sandbox');
+// By default we keep web security enabled and only relax Electron flags if
+// the compatibility flag is explicitly enabled. This preserves functionality
+// for the Spotify widget while avoiding unnecessary global exceptions.
+if (allowSpotifyCompatibility) {
+    app.commandLine.appendSwitch('disable-features',
+        'SameSiteByDefaultCookies,CookiesWithoutSameSiteMustBeSecure,PartitionedCookies,ThirdPartyStoragePartitioning'
+    );
+    app.commandLine.appendSwitch('enable-features', 'StorageAccessAPI');
+    app.commandLine.appendSwitch('disable-site-isolation-trials');
+    // Only apply when explicitly requested because it weakens process isolation
+    app.commandLine.appendSwitch('no-sandbox');
+} else {
+    app.commandLine.appendSwitch('enable-features', 'StorageAccessAPI');
+}
 
 const fs = require('fs');
 const chromeVersion = '143.0.7499.147'; // Found on system
@@ -49,6 +56,16 @@ if (fs.existsSync(widevinePath)) {
 const createWindow = () => {
     // Create shared session for Spotify authentication
     const sharedSession = session.fromPartition('persist:spotify');
+
+    const allowedNavigationHosts = new Set([
+        '127.0.0.1',
+        'localhost',
+        'open.spotify.com',
+        'accounts.spotify.com',
+        'sdk.scdn.co',
+        'youtube.com',
+        'www.youtube.com',
+    ]);
 
     // ========================================================================
     // CRITICAL FIX #1: Grant Storage Access API Permissions
@@ -181,9 +198,7 @@ const createWindow = () => {
             contextIsolation: true,
             partition: 'persist:spotify', // Use persistent session
             session: sharedSession,
-            // CRITICAL: Temporarily disable webSecurity to test if partitioning is the issue
-            // TODO: Re-enable after confirming Spotify login works
-            webSecurity: false, // Allow cross-origin iframe access
+            webSecurity: !allowSpotifyCompatibility, // Enable by default; can be toggled for Spotify iframe troubleshooting
             allowRunningInsecureContent: false,
             // Storage and cache
             enableRemoteModule: false,
@@ -195,29 +210,45 @@ const createWindow = () => {
     // Hide traffic lights explicitly (macOS)
     mainWindow.setWindowButtonVisibility(false);
 
+    // Prevent unexpected navigations to untrusted domains
+    mainWindow.webContents.on('will-navigate', (event, url) => {
+        try {
+            if (url.startsWith('file://')) {
+                return;
+            }
+            const hostname = new URL(url).hostname;
+            if (!allowedNavigationHosts.has(hostname) && !url.startsWith('devtools://')) {
+                event.preventDefault();
+                shell.openExternal(url);
+            }
+        } catch (error) {
+            event.preventDefault();
+        }
+    });
+
     // Handle Auth Popups & External Links
     mainWindow.webContents.setWindowOpenHandler(({ url }) => {
         // If it's the Spotify Login, allow it in a new window
         if (url.includes('spotify.com')) {
             return {
                 action: 'allow',
-                overrideBrowserWindowOptions: {
-                    width: 500,
-                    height: 800,
-                    frame: true, // Show frame so they can close it
-                    autoHideMenuBar: true,
-                    webPreferences: {
-                        nodeIntegration: false,
-                        contextIsolation: true,
-                        partition: 'persist:spotify', // SAME session as main window
-                        session: sharedSession,
-                        webSecurity: false, // Match main window settings
-                    }
+                        overrideBrowserWindowOptions: {
+                            width: 500,
+                            height: 800,
+                            frame: true, // Show frame so they can close it
+                            autoHideMenuBar: true,
+                            webPreferences: {
+                                nodeIntegration: false,
+                                contextIsolation: true,
+                                partition: 'persist:spotify', // SAME session as main window
+                                session: sharedSession,
+                                webSecurity: !allowSpotifyCompatibility,
+                            }
+                        }
+                    };
                 }
-            };
-        }
         // Default: Open in default browser (good UX practice)
-        require('electron').shell.openExternal(url);
+        shell.openExternal(url);
         return { action: 'deny' };
     });
 
