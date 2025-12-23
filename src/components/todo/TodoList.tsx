@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { useAnimate, motion } from 'framer-motion';
 import { Plus, Trash2, Check, AlertCircle, BookOpen, FileText, UploadCloud, Calendar as CalendarIcon } from 'lucide-react';
 import { clsx } from 'clsx';
@@ -20,33 +20,32 @@ export function TodoList() {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [scope, animate] = useAnimate();
 
-    const saveTodos = (newTodos: TodoItem[]) => {
-        setTodos(newTodos);
-        storage.saveTodos(newTodos);
-    };
-
-    const addTodo = (e: React.FormEvent) => {
+    const addTodo = useCallback((e: React.FormEvent) => {
         e.preventDefault();
         if (!newTodo.trim()) return;
 
-        const todo: TodoItem = {
-            id: crypto.randomUUID(),
-            text: newTodo,
-            completed: false,
-            category: 'study',
-            priority,
-            subjectId: selectedSubject || undefined,
-            dueDate: dueDate || undefined,
-            notes: newNote || undefined
-        };
+        setTodos((prevTodos) => {
+            const todo: TodoItem = {
+                id: crypto.randomUUID(),
+                text: newTodo,
+                completed: false,
+                category: 'study',
+                priority,
+                subjectId: selectedSubject || undefined,
+                dueDate: dueDate || undefined,
+                notes: newNote || undefined
+            };
 
-        // Sort by priority on insert (simple approach)
-        const newTodos = [todo, ...todos].sort((a, b) => {
-            const p = { high: 3, medium: 2, low: 1 };
-            return p[b.priority] - p[a.priority];
+            // Sort by priority on insert (simple approach)
+            const newTodos = [todo, ...prevTodos].sort((a, b) => {
+                const p = { high: 3, medium: 2, low: 1 };
+                return p[b.priority] - p[a.priority];
+            });
+
+            storage.saveTodos(newTodos);
+            return newTodos;
         });
 
-        saveTodos(newTodos);
         setNewTodo('');
         setNewNote('');
         setPriority('medium');
@@ -55,28 +54,37 @@ export function TodoList() {
 
         // Animate in
         animate("li:first-child", { opacity: [0, 1], y: [-20, 0] }, { duration: 0.3 });
-    };
+    }, [animate, dueDate, newNote, newTodo, priority, selectedSubject]);
 
-    const toggleTodo = (id: string) => {
-        const newTodos = todos.map(t =>
-            t.id === id ? { ...t, completed: !t.completed } : t
-        );
-        saveTodos(newTodos);
-    };
+    const toggleTodo = useCallback((id: string) => {
+        setTodos((prevTodos) => {
+            const newTodos = prevTodos.map(t =>
+                t.id === id ? { ...t, completed: !t.completed } : t
+            );
+            storage.saveTodos(newTodos);
+            return newTodos;
+        });
+    }, []);
 
-    const deleteTodo = (id: string) => {
-        const newTodos = todos.filter(t => t.id !== id);
-        saveTodos(newTodos);
-    };
+    const deleteTodo = useCallback((id: string) => {
+        setTodos((prevTodos) => {
+            const newTodos = prevTodos.filter(t => t.id !== id);
+            storage.saveTodos(newTodos);
+            return newTodos;
+        });
+    }, []);
 
-    const updateNote = (id: string, note: string) => {
-        const newTodos = todos.map(t =>
-            t.id === id ? { ...t, notes: note } : t
-        );
-        saveTodos(newTodos);
-    };
+    const updateNote = useCallback((id: string, note: string) => {
+        setTodos((prevTodos) => {
+            const newTodos = prevTodos.map(t =>
+                t.id === id ? { ...t, notes: note } : t
+            );
+            storage.saveTodos(newTodos);
+            return newTodos;
+        });
+    }, []);
 
-    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
@@ -85,18 +93,24 @@ export function TodoList() {
             const content = event.target?.result as string;
             if (content) {
                 const parsedTodos = parseTodoCSV(content);
-                const mergedTodos = [...parsedTodos, ...todos]; // Add new ones at top
-                saveTodos(mergedTodos);
+                setTodos((prevTodos) => {
+                    const mergedTodos = [...parsedTodos, ...prevTodos]; // Add new ones at top
+                    storage.saveTodos(mergedTodos);
+                    return mergedTodos;
+                });
                 // Clear input
                 if (fileInputRef.current) fileInputRef.current.value = '';
             }
         };
         reader.readAsText(file);
-    };
+    }, []);
 
-    const triggerFileInput = () => {
+    const triggerFileInput = useCallback(() => {
         fileInputRef.current?.click();
-    };
+    }, []);
+
+    const completedCount = useMemo(() => todos.filter(t => t.completed).length, [todos]);
+    const subjectLookup = useMemo(() => Object.fromEntries(exams.map((exam) => [exam.id, exam])), [exams]);
 
     const getPriorityColor = (p: string) => {
         if (p === 'high') return 'text-rose-500 bg-rose-50 border-rose-200';
@@ -124,7 +138,7 @@ export function TodoList() {
                         accept=".csv"
                         className="hidden"
                     />
-                    <span>{todos.filter(t => t.completed).length}/{todos.length} Completed</span>
+                    <span>{completedCount}/{todos.length} Completed</span>
                 </div>
             </div>
 
@@ -194,7 +208,7 @@ export function TodoList() {
                 )}
 
                 {todos.map((todo) => {
-                    const subject = exams.find(e => e.id === todo.subjectId);
+                    const subject = todo.subjectId ? subjectLookup[todo.subjectId] : undefined;
 
                     return (
                         <motion.li
