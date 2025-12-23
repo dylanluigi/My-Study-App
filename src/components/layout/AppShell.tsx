@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { Calendar, CheckSquare, Layers, Minus, X, Sliders } from 'lucide-react';
+import { Calendar, CheckSquare, Layers, Minus, X, Sliders, Palette } from 'lucide-react';
 import { twMerge } from 'tailwind-merge';
 import { ThemeSelector } from '../theme/ThemeSelector';
 import { VisualSettings } from '../theme/VisualSettings';
@@ -62,9 +62,11 @@ export function AppShell({ children, activeTab, onTabChange }: AppShellProps) {
                         {/* Theme Toggle Button */}
                         <button
                             onClick={() => setShowThemeSelector(!showThemeSelector)}
-                            className="h-8 w-8 rounded-full bg-gradient-to-tr from-blue-400 to-purple-500 hover:scale-110 active:scale-95 transition-transform shadow-lg cursor-pointer ring-2 ring-white/20"
+                            className="h-8 w-8 rounded-full bg-white/20 text-white flex items-center justify-center hover:bg-orange-500/20 hover:scale-110 active:scale-95 transition-all shadow-lg cursor-pointer ring-1 ring-white/10"
                             title="Theme Settings"
-                        />
+                        >
+                            <Palette size={24} />
+                        </button>
                     </div>
                     {showThemeSelector && <ThemeSelector onClose={() => setShowThemeSelector(false)} />}
 
@@ -133,8 +135,8 @@ function NavItem({ icon, label, active, onClick }: NavItemProps) {
             className={twMerge(
                 "group relative flex h-12 w-12 items-center justify-center rounded-xl transition-all duration-300",
                 active
-                    ? "bg-white/40 text-blue-600 shadow-lg scale-105"
-                    : "text-slate-600 hover:bg-white/20 hover:scale-110 hover:text-slate-900"
+                    ? "bg-white/20 text-orange-500 shadow-lg scale-105"
+                    : "text-white/60 hover:bg-white/10 hover:scale-110 hover:text-white"
             )}
         >
             {icon}

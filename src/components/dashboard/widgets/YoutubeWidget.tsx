@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Save, Link as LinkIcon, Youtube } from 'lucide-react';
+import { Save, Link as LinkIcon } from 'lucide-react';
 import { BaseWidget } from '../BaseWidget';
 
 interface YoutubeWidgetProps {
@@ -55,8 +55,8 @@ export function YoutubeWidget({ data, onUpdate, isEditMode }: YoutubeWidgetProps
     const currentSrc = data?.youtubeUrl || "https://www.youtube.com/embed/jfKfPfyJRdk";
 
     return (
-        <BaseWidget className="h-[450px] p-0 border-none bg-transparent !overflow-visible shadow-none group/youtube">
-            <div className="h-full w-full rounded-3xl overflow-hidden shadow-lg border border-white/20 relative bg-black/80">
+        <BaseWidget className="aspect-video p-0 border-none bg-transparent !overflow-visible shadow-none group/youtube">
+            <div className="h-full w-full rounded-2xl overflow-hidden shadow-2xl relative bg-black">
                 {isEditMode ? (
                     <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm p-6 text-center">
                         <div
@@ -101,14 +101,6 @@ export function YoutubeWidget({ data, onUpdate, isEditMode }: YoutubeWidgetProps
                     allowFullScreen
                     className="relative z-10"
                 />
-
-                {!isEditMode && (
-                    <div className="absolute top-4 right-4 z-20 opacity-0 group-hover/youtube:opacity-100 transition-opacity">
-                        <div className="bg-black/50 text-white p-2 rounded-full backdrop-blur-md">
-                            <Youtube size={16} className="text-red-500" />
-                        </div>
-                    </div>
-                )}
             </div>
         </BaseWidget >
     );

@@ -92,7 +92,7 @@ export function DashboardView({ onNavigate, isVisible }: DashboardProps) {
             .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
     ), [exams]);
 
-    const nextExam = useMemo(() => upcomingExams[0], [upcomingExams]);
+
 
     // Drag and Drop Sensors
     const sensors = useSensors(
@@ -155,13 +155,13 @@ export function DashboardView({ onNavigate, isVisible }: DashboardProps) {
                         {timeOfDayIcon}
                     </div>
                     <div>
-                        <h1 className="text-4xl font-bold text-slate-900 tracking-tight">{greeting}, {name}</h1>
-                        <p className="text-slate-700 font-medium">Ready to conquer the day?</p>
+                        <h1 className="text-4xl font-bold text-slate-900 tracking-tight" style={{ color: 'rgba(255, 255, 255, 1)' }}>{greeting}, {name}</h1>
+                        <p className="text-slate-700 font-medium" style={{ color: 'rgba(214, 214, 214, 0.88)' }}>Ready to conquer the day?</p>
                     </div>
                 </motion.div>
 
                 {/* Edit Mode Toggle */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2" >
                     {isEditMode && (
                         <motion.button
                             initial={{ scale: 0 }}
@@ -182,6 +182,7 @@ export function DashboardView({ onNavigate, isVisible }: DashboardProps) {
                             isEditMode ? "bg-slate-800 text-white shadow-md rotate-90" : "bg-white/20 text-slate-600 hover:bg-white/40 hover:text-slate-900"
                         )}
                         title="Customize Dashboard"
+                        style={{ color: 'rgba(255, 255, 255, 0.88)' }}
                     >
                         {isEditMode ? <X size={20} /> : <Settings size={20} />}
                     </button>
@@ -246,7 +247,7 @@ export function DashboardView({ onNavigate, isVisible }: DashboardProps) {
                                             animate={{
                                                 opacity: 1,
                                                 scale: 1,
-                                                rotate: isEditMode ? [-0.5, 0.5, -0.5] : 0,
+                                                rotate: isEditMode ? [-0.25, 0.25, -0.25] : 0,
                                             }}
                                             transition={{
                                                 // Only repeat if in edit mode
@@ -274,7 +275,7 @@ export function DashboardView({ onNavigate, isVisible }: DashboardProps) {
                                                 />
                                             )}
                                             {widget.type === 'exams' && (
-                                                <ExamWidget nextExam={nextExam} />
+                                                <ExamWidget exams={upcomingExams} />
                                             )}
                                             {widget.type === 'spotify' && (
                                                 <SpotifyWidget
