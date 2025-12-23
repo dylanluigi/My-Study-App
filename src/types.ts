@@ -34,3 +34,7 @@ export interface WidgetInstance {
     title?: string;
     data?: Record<string, unknown>; // For flexible configuration (e.g. spotify url, clock format)
 }
+
+export interface UserProfile {
+    name: string;
+}

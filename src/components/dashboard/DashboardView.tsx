@@ -29,6 +29,7 @@ import { SortableWidget } from './widgets/SortableWidget';
 import { PomodoroTimerWidget } from './widgets/PomodoroTimerWidget';
 
 import { YoutubeWidget } from './widgets/YoutubeWidget';
+import { useUser } from '../../services/user/UserContext';
 
 interface DashboardProps {
     onNavigate: (tab: 'dashboard' | 'calendar' | 'todo' | 'exams') => void;
@@ -47,6 +48,7 @@ const AVAILABLE_WIDGETS: { type: WidgetType, title: string, defaultSpan: 1 | 2 |
 export function DashboardView({ onNavigate, isVisible }: DashboardProps) {
     const [todos, setTodos] = useState<TodoItem[]>(() => storage.getTodos());
     const [exams, setExams] = useState<Exam[]>(() => storage.getExams());
+    const { name } = useUser();
 
     // Auto-refresh when becoming visible
     useEffect(() => {
@@ -153,7 +155,7 @@ export function DashboardView({ onNavigate, isVisible }: DashboardProps) {
                         {timeOfDayIcon}
                     </div>
                     <div>
-                        <h1 className="text-4xl font-bold text-slate-900 tracking-tight">{greeting}, Dylan</h1>
+                        <h1 className="text-4xl font-bold text-slate-900 tracking-tight">{greeting}, {name}</h1>
                         <p className="text-slate-700 font-medium">Ready to conquer the day?</p>
                     </div>
                 </motion.div>

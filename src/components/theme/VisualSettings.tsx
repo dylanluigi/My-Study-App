@@ -1,13 +1,21 @@
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { X, Moon } from 'lucide-react';
+import { X, Moon, UserRound } from 'lucide-react';
 import { useTheme } from '../../services/theme/ThemeContext';
 import { clsx } from 'clsx';
+import { useUser } from '../../services/user/UserContext';
 
 export function VisualSettings({ onClose }: { onClose: () => void }) {
     const {
         blurIntensity, setBlurIntensity,
         panelOpacity, setPanelOpacity
     } = useTheme();
+    const { name, setName } = useUser();
+    const [draftName, setDraftName] = useState(name);
+
+    useEffect(() => {
+        setDraftName(name);
+    }, [name]);
 
     return (
         <motion.div
@@ -24,6 +32,32 @@ export function VisualSettings({ onClose }: { onClose: () => void }) {
             </div>
 
             <div className="flex flex-col gap-6">
+                {/* User Name */}
+                <div className="flex flex-col gap-2">
+                    <div className="flex items-center justify-between text-xs text-slate-300">
+                        <div className="flex items-center gap-2 font-semibold">
+                            <UserRound size={14} className="text-blue-300" />
+                            <span>Display Name</span>
+                        </div>
+                        <span className="text-[11px] text-slate-400">Used in greetings</span>
+                    </div>
+                    <div className="flex gap-2">
+                        <input
+                            type="text"
+                            value={draftName}
+                            onChange={(e) => setDraftName(e.target.value)}
+                            placeholder="Enter your name"
+                            className="flex-1 rounded-lg bg-white/10 px-3 py-2 text-sm text-white placeholder:text-white/40 border border-white/10 focus:outline-none focus:ring-2 focus:ring-blue-400/70"
+                        />
+                        <button
+                            onClick={() => setName(draftName)}
+                            className="px-3 py-2 rounded-lg bg-blue-500 text-white text-sm font-semibold hover:bg-blue-400 transition-colors"
+                        >
+                            Save
+                        </button>
+                    </div>
+                </div>
+
                 {/* Blur Slider */}
                 <div className="flex flex-col gap-2">
                     <div className="flex justify-between text-xs text-slate-400">
