@@ -25,7 +25,7 @@ export interface TodoItem {
     dueDate?: string; // ISO date string YYYY-MM-DD
 }
 
-export type WidgetType = 'focus' | 'exams' | 'spotify' | 'clock' | 'youtube';
+export type WidgetType = 'focus' | 'exams' | 'spotify' | 'clock' | 'youtube' | 'pomodoro';
 
 export interface WidgetInstance {
     id: string; // unique instance id

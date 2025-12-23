@@ -26,6 +26,7 @@ import { SpotifyWidget } from './widgets/SpotifyWidget';
 import { ClockWidget } from './widgets/ClockWidget';
 import { BaseWidget } from './BaseWidget';
 import { SortableWidget } from './widgets/SortableWidget';
+import { PomodoroTimerWidget } from './widgets/PomodoroTimerWidget';
 
 import { YoutubeWidget } from './widgets/YoutubeWidget';
 
@@ -39,6 +40,7 @@ const AVAILABLE_WIDGETS: { type: WidgetType, title: string, defaultSpan: 1 | 2 |
     { type: 'exams', title: "Next Exam", defaultSpan: 2 },
     { type: 'spotify', title: "Spotify Player", defaultSpan: 2 },
     { type: 'youtube', title: "YouTube Player", defaultSpan: 2 },
+    { type: 'pomodoro', title: "Pomodoro Timer", defaultSpan: 1 },
     { type: 'clock', title: "Clock", defaultSpan: 1 },
 ];
 
@@ -289,10 +291,22 @@ export function DashboardView({ onNavigate, isVisible }: DashboardProps) {
                                                     }}
                                                 />
                                             )}
+                                            {widget.type === 'pomodoro' && (
+                                                <PomodoroTimerWidget
+                                                    data={widget.data as any}
+                                                    onUpdate={(data) => {
+                                                        const newLayout = widgets.map(w =>
+                                                            w.id === widget.id ? { ...w, data: { ...w.data, ...data } } : w
+                                                        );
+                                                        setWidgets(newLayout);
+                                                        storage.saveLayout(newLayout);
+                                                    }}
+                                                />
+                                            )}
                                             {widget.type === 'clock' && <ClockWidget />}
 
                                             {/* Fallback/Error state */}
-                                            {!['focus', 'exams', 'spotify', 'clock', 'youtube'].includes(widget.type) && (
+                                            {!['focus', 'exams', 'spotify', 'clock', 'youtube', 'pomodoro'].includes(widget.type) && (
                                                 <BaseWidget title="Unknown Widget" colSpan={widget.colSpan}>
                                                     <div className="text-red-400 text-sm">Widget type '{widget.type}' not found.</div>
                                                 </BaseWidget>
