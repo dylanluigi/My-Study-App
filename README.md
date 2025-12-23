@@ -1,73 +1,74 @@
-# React + TypeScript + Vite
+# My Study App
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+My Study App is a cross-platform organizer built with React, TypeScript, Vite, and Electron. It combines a dashboard of widgets with calendar planning, to-do management, exam tracking, and focused study tools so you can centralize your workflow in one interface. The project is configured for local development, desktop packaging, and secure sharing on GitHub.
 
-Currently, two official plugins are available:
+## Features
+- **Dashboard widgets**: Arrange tiles for focus timers, exam lists, Spotify playback, clocks, YouTube embeds, Pomodoro timers, and PDF previews.
+- **Calendar view**: Add, edit, and browse events with modal dialogs.
+- **Task management**: Track tasks with priorities and completion states.
+- **Exam organizer**: Store exam details, dates, and study notes.
+- **Media helpers**: Spotify playback and YouTube embeds (requires your own Spotify client ID for authentication).
+- **Theming**: Switch themes and adjust visual settings via the built-in controls.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Security & Privacy
+- **Spotify credentials stay local**: You must supply your own `VITE_SPOTIFY_CLIENT_ID` via environment variables; no shared or default client IDs are shipped in the codebase.
+- **Electron hardening**: Browser windows use `contextIsolation`, disable `nodeIntegration`, and block navigation to untrusted hosts. External links are opened in the system browser.
+- **Optional compatibility mode**: If Spotify embeds require relaxed cookie handling, set `SPOTIFY_IFRAME_COMPAT=true` when launching Electron. By default, stricter web security is enforced.
 
-## React Compiler
+## Prerequisites
+- Node.js 20+ and npm
+- A Spotify application client ID if you plan to use the Spotify widget (configure redirect URI `http://127.0.0.1:5173/callback` in the Spotify dashboard).
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Getting Started
+1. **Install dependencies**
+   ```bash
+   npm install
+   ```
+2. **Set environment variables**
+   Create a `.env` file in the project root:
+   ```bash
+   VITE_SPOTIFY_CLIENT_ID=<your_spotify_client_id>
+   ```
+   The redirect URI is fixed at `http://127.0.0.1:5173/callback` for local development; add it to your Spotify app configuration.
 
-## Expanding the ESLint configuration
+## Running the app
+- **Web (Vite)**
+  ```bash
+  npm run dev
+  ```
+  Visit the printed URL (defaults to `http://127.0.0.1:5173`).
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- **Desktop (Electron)**
+  ```bash
+  npm run electron:dev
+  ```
+  If Spotify login requires relaxed cookie rules, start with `SPOTIFY_IFRAME_COMPAT=true npm run electron:dev`.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Building & Testing
+- **Production build**
+  ```bash
+  npm run build
+  ```
+- **Preview the build**
+  ```bash
+  npm run preview
+  ```
+- **Package desktop app**
+  ```bash
+  npm run electron:build
+  ```
+- **Lint**
+  ```bash
+  npm run lint
+  ```
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## Usage guide
+- **Dashboard**: Add widgets (Spotify, YouTube, focus timer, etc.) and resize them to fit your workspace.
+- **Calendar**: Click dates to create events or edit existing entries in modal dialogs.
+- **Tasks**: Manage to-dos with priorities and mark them complete as you work.
+- **Exams**: Keep exam metadata (date, subject, notes) organized and ready to review.
+- **Spotify**: Click the Spotify widget login button to authenticate with your own client ID; playback uses the Web Playback SDK. If authentication fails inside Electron, retry with `SPOTIFY_IFRAME_COMPAT=true` to enable the compatibility tweaks.
+- **YouTube/PDF**: Use the widgets to embed study videos or reference PDFs alongside your tasks.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
-
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## Licensing
+This project is distributed under the Business Source License 1.1 (BUSL-1.1). See [LICENSE](./LICENSE) for details. You may use, modify, and contribute to the codebase for non-production purposes; production use requires permission from the licensor until the change date specified in the license.
