@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
     format,
     startOfMonth,
@@ -19,6 +19,8 @@ import { type CalendarEvent, type Exam } from '../../types';
 import { storage } from '../../utils/storage';
 import { EventModal } from './EventModal';
 
+const WEEK_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const;
+
 export function CalendarView({ exam_list }: { exam_list?: Exam[] }) {
     const [currentDate, setCurrentDate] = useState(new Date());
     // Local events only (user created non-exam events)
@@ -29,32 +31,32 @@ export function CalendarView({ exam_list }: { exam_list?: Exam[] }) {
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
     // Fetch exams from storage if not provided in props
-    const exams = exam_list || storage.getExams();
+    const exams = useMemo(() => exam_list || storage.getExams(), [exam_list, currentDate, isModalOpen, localEvents]);
 
     // Derived exam events
-    const examEvents = exams.map(exam => ({
+    const examEvents = useMemo(() => exams.map(exam => ({
         id: exam.id,
         title: `EXAM: ${exam.subject}`,
         date: exam.date,
         type: 'exam' as const,
         completed: false,
         color: exam.color
-    }));
+    })), [exams]);
 
     // Combined events for display
-    const events = [...localEvents, ...examEvents];
+    const events = useMemo(() => [...localEvents, ...examEvents], [localEvents, examEvents]);
 
-    const saveEvents = (newLocalEvents: CalendarEvent[]) => {
+    const saveEvents = useCallback((newLocalEvents: CalendarEvent[]) => {
         setLocalEvents(newLocalEvents);
         storage.saveEvents(newLocalEvents);
-    };
+    }, []);
 
-    const handleDayClick = (date: Date) => {
+    const handleDayClick = useCallback((date: Date) => {
         setSelectedDate(date);
         setIsModalOpen(true);
-    };
+    }, []);
 
-    const handleSaveEvent = (title: string) => {
+    const handleSaveEvent = useCallback((title: string) => {
         if (!selectedDate || !title) return;
 
         const newEvent: CalendarEvent = {
@@ -66,23 +68,21 @@ export function CalendarView({ exam_list }: { exam_list?: Exam[] }) {
         };
 
         saveEvents([...localEvents, newEvent]); // Use localEvents directly to append
-    };
+    }, [localEvents, saveEvents, selectedDate]);
 
-    const nextMonth = () => setCurrentDate(addMonths(currentDate, 1));
-    const prevMonth = () => setCurrentDate(subMonths(currentDate, 1));
-    const jumpToToday = () => setCurrentDate(new Date());
+    const nextMonth = useCallback(() => setCurrentDate((prev) => addMonths(prev, 1)), []);
+    const prevMonth = useCallback(() => setCurrentDate((prev) => subMonths(prev, 1)), []);
+    const jumpToToday = useCallback(() => setCurrentDate(new Date()), []);
 
-    const monthStart = startOfMonth(currentDate);
-    const monthEnd = endOfMonth(monthStart);
-    const startDate = startOfWeek(monthStart);
-    const endDate = endOfWeek(monthEnd);
+    const monthStart = useMemo(() => startOfMonth(currentDate), [currentDate]);
+    const monthEnd = useMemo(() => endOfMonth(monthStart), [monthStart]);
+    const startDate = useMemo(() => startOfWeek(monthStart), [monthStart]);
+    const endDate = useMemo(() => endOfWeek(monthEnd), [monthEnd]);
 
-    const days = eachDayOfInterval({
+    const days = useMemo(() => eachDayOfInterval({
         start: startDate,
         end: endDate,
-    });
-
-    const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    }), [startDate, endDate]);
 
     return (
         <div className="flex h-full flex-col gap-4">
@@ -118,7 +118,7 @@ export function CalendarView({ exam_list }: { exam_list?: Exam[] }) {
                 <div className="grid h-full grid-cols-7 grid-rows-[auto_1fr] gap-4">
 
                     {/* Weekday Headers */}
-                    {weekDays.map((day) => (
+                    {WEEK_DAYS.map((day) => (
                         <div key={day} className="text-center text-xs font-bold text-slate-500 uppercase tracking-widest">
                             {day}
                         </div>

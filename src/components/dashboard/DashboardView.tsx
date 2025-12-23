@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sun, Moon, Sunrise, Settings, Plus, X, Trash2, LayoutGrid } from 'lucide-react';
 import { differenceInDays, parseISO } from 'date-fns';
@@ -54,13 +54,15 @@ export function DashboardView({ onNavigate, isVisible }: DashboardProps) {
         }
     }, [isVisible]);
 
-    const toggleTodo = (id: string) => {
-        const newTodos = todos.map(t =>
-            t.id === id ? { ...t, completed: !t.completed } : t
-        );
-        setTodos(newTodos);
-        storage.saveTodos(newTodos);
-    };
+    const toggleTodo = useCallback((id: string) => {
+        setTodos((prevTodos) => {
+            const newTodos = prevTodos.map(t =>
+                t.id === id ? { ...t, completed: !t.completed } : t
+            );
+            storage.saveTodos(newTodos);
+            return newTodos;
+        });
+    }, []);
 
     // Greeting Logic
     const getGreetingDetails = () => {
@@ -80,11 +82,13 @@ export function DashboardView({ onNavigate, isVisible }: DashboardProps) {
     const [isEditMode, setIsEditMode] = useState(false);
     const [showAddMenu, setShowAddMenu] = useState(false);
 
-    const upcomingExams = exams
-        .filter(e => differenceInDays(parseISO(e.date), new Date()) >= 0)
-        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    const upcomingExams = useMemo(() => (
+        exams
+            .filter(e => differenceInDays(parseISO(e.date), new Date()) >= 0)
+            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    ), [exams]);
 
-    const nextExam = upcomingExams[0];
+    const nextExam = useMemo(() => upcomingExams[0], [upcomingExams]);
 
     // Drag and Drop Sensors
     const sensors = useSensors(
@@ -94,7 +98,7 @@ export function DashboardView({ onNavigate, isVisible }: DashboardProps) {
         })
     );
 
-    const handleDragEnd = (event: DragEndEvent) => {
+    const handleDragEnd = useCallback((event: DragEndEvent) => {
         const { active, over } = event;
 
         if (over && active.id !== over.id) {
@@ -107,27 +111,32 @@ export function DashboardView({ onNavigate, isVisible }: DashboardProps) {
                 return newLayout;
             });
         }
-    };
+    }, []);
 
     // Widget Management
-    const addWidget = (type: WidgetType, defaultSpan: 1 | 2 | 3 | 4) => {
-        const newWidget: WidgetInstance = {
-            id: crypto.randomUUID(),
-            type,
-            colSpan: defaultSpan,
-            title: '' // Title often handled by component itself or overridden
-        };
-        const newLayout = [...widgets, newWidget];
-        setWidgets(newLayout);
-        storage.saveLayout(newLayout);
-        setShowAddMenu(false);
-    };
+    const addWidget = useCallback((type: WidgetType, defaultSpan: 1 | 2 | 3 | 4) => {
+        setWidgets((prevWidgets) => {
+            const newWidget: WidgetInstance = {
+                id: crypto.randomUUID(),
+                type,
+                colSpan: defaultSpan,
+                title: '' // Title often handled by component itself or overridden
+            };
 
-    const removeWidget = (id: string) => {
-        const newLayout = widgets.filter(w => w.id !== id);
-        setWidgets(newLayout);
-        storage.saveLayout(newLayout);
-    };
+            const newLayout = [...prevWidgets, newWidget];
+            storage.saveLayout(newLayout);
+            return newLayout;
+        });
+        setShowAddMenu(false);
+    }, []);
+
+    const removeWidget = useCallback((id: string) => {
+        setWidgets((prevWidgets) => {
+            const newLayout = prevWidgets.filter(w => w.id !== id);
+            storage.saveLayout(newLayout);
+            return newLayout;
+        });
+    }, []);
 
     return (
         <div className="flex h-full flex-col gap-6 relative">

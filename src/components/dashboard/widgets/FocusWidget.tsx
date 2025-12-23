@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { CheckCircle, ArrowRight, ChevronDown, ChevronRight, FileText } from 'lucide-react';
 import { clsx } from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -18,31 +18,33 @@ export function FocusWidget({ todos, exams, onNavigate, onToggleTask }: FocusWid
     const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
 
     // Filter tasks logic (reused)
-    const todayStart = startOfDay(new Date());
+    const focusTasks = useMemo(() => {
+        const todayStart = startOfDay(new Date());
 
-    const focusTasks = todos.filter(t => {
-        if (t.completed) return false;
-        if (t.dueDate) {
-            // parseISO converts YYYY-MM-DD to local 00:00:00
-            const due = parseISO(t.dueDate);
-            // Check if due date is today or in the past
-            if (isBefore(due, todayStart) || isSameDay(due, todayStart)) return true;
-        }
-        if (t.priority === 'high') return true;
-        return false;
-    });
+        return todos.filter(t => {
+            if (t.completed) return false;
+            if (t.dueDate) {
+                // parseISO converts YYYY-MM-DD to local 00:00:00
+                const due = parseISO(t.dueDate);
+                // Check if due date is today or in the past
+                if (isBefore(due, todayStart) || isSameDay(due, todayStart)) return true;
+            }
+            if (t.priority === 'high') return true;
+            return false;
+        });
+    }, [todos]);
 
-    const groupedTasks: Record<string, TodoItem[]> = {};
-    const noSubjectTasks: TodoItem[] = [];
-
-    focusTasks.forEach(task => {
+    const groupedTasks = useMemo(() => focusTasks.reduce<Record<string, TodoItem[]>>((groups, task) => {
         if (task.subjectId) {
-            if (!groupedTasks[task.subjectId]) groupedTasks[task.subjectId] = [];
-            groupedTasks[task.subjectId].push(task);
-        } else {
-            noSubjectTasks.push(task);
+            if (!groups[task.subjectId]) groups[task.subjectId] = [];
+            groups[task.subjectId].push(task);
         }
-    });
+        return groups;
+    }, {}), [focusTasks]);
+
+    const noSubjectTasks = useMemo(() => focusTasks.filter(task => !task.subjectId), [focusTasks]);
+
+    const subjectLookup = useMemo(() => Object.fromEntries(exams.map(exam => [exam.id, exam])), [exams]);
 
     return (
         <BaseWidget
@@ -67,7 +69,7 @@ export function FocusWidget({ todos, exams, onNavigate, onToggleTask }: FocusWid
                 ) : (
                     <>
                         {Object.entries(groupedTasks).map(([subjectId, tasks]) => {
-                            const subject = exams.find(e => e.id === subjectId);
+                            const subject = subjectLookup[subjectId];
                             return (
                                 <div key={subjectId} className="flex flex-col gap-2">
                                     <div className={clsx("text-xs font-bold uppercase tracking-wider px-1", subject ? "text-slate-600" : "text-slate-400")}>
